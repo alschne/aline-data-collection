@@ -150,10 +150,17 @@ Background knowledge:
 - Saves and shares on IG posts signal content worth bookmarking — valuable for B2B credibility content
 - Watch time under 3 seconds on reels = hook problem, not CTA problem
 
+This is a B2B service business — the WEBSITE is where conversions happen, not Instagram. Instagram is a top-of-funnel awareness tool. Weight your insights accordingly:
+- Website engagement rate, session duration, and traffic sources are the most important metrics
+- Instagram matters primarily as a driver of website traffic (check social users vs IG reach)
+- A good engagement rate for B2B is 50%+; below 40% is a concern worth flagging
+- If session duration is short (under 1 minute), people aren't reading the content
+- Direct traffic growth means brand awareness is building
+
 Write exactly 3 short paragraphs in plain HTML only (no headers, bullets, markdown, preamble):
-1. ONE sentence on the most important signal across both Instagram and website this week. Lead with something positive. Reference a specific number.
-2. ONE sentence identifying the most interesting connection or contrast between Instagram and website performance.
-3. ONE specific, actionable thing to do next week — could be Instagram OR website, whichever has the higher leverage opportunity right now.
+1. ONE sentence on the most important WEBSITE signal this week. Lead with something positive. Reference a specific number.
+2. ONE sentence on Instagram — specifically whether it is driving website traffic.
+3. ONE specific actionable thing for next week — prioritise website improvements unless Instagram is clearly the bottleneck.
 
 Total under 100 words. Be warm, direct, specific. Never lead with what went wrong.
 Return only the 3 HTML paragraphs, nothing else."""
@@ -440,7 +447,7 @@ def build_html(
     <tr style="background:#fafafa">
       <td style="padding:9px 8px;font-size:13px">Top Landing Page</td>
       <td style="padding:9px 8px;text-align:right;font-size:13px" colspan="2">
-        {wp.get('top_landing_page') or '—'}
+        {('Home Page' if wp.get('top_landing_page') == '/' else wp.get('top_landing_page')) or '—'}
         {f'<span style="color:#aaa;font-size:11px"> · {_fmt(wp.get("top_page_sessions"))} sessions · {_fmt(wp.get("top_page_engagement_rate_pct"))}% engaged</span>' if wp.get('top_landing_page') else ''}
       </td>
     </tr>
@@ -478,7 +485,7 @@ def send_digest(
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"📊 Weekly Analytics — week ending {week_end}"
-    msg["From"] = f"Analytics Pipeline <{config.EMAIL_SENDER}>"
+    msg["From"] = f"AA Analytics Pipeline <{config.EMAIL_SENDER}>"
     msg["To"] = config.EMAIL_RECIPIENT
     msg.attach(MIMEText(html, "html"))
 

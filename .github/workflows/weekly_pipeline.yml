@@ -2,11 +2,38 @@ name: Weekly Analytics Pipeline
 
 on:
   schedule:
-    - cron: "0 8 * * 1"  # Monday 8AM UTC (1AM Mountain)
+    - cron: "0 8 * * 1"  # Monday 8AM UTC
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Run mode'
+        required: false
+        default: 'weekly'
+        type: choice
+        options:
+          - weekly
+          - quarterly
+          - annual
+          - all_reviews
+
+env:
+  IG_APP_ID: ${{ secrets.IG_APP_ID }}
+  IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
+  IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+  IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
+  GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
+  GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+  GOOGLE_SPREADSHEET_ID: ${{ secrets.GOOGLE_SPREADSHEET_ID }}
+  EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+  EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+  EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+  GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_REPO: ${{ github.repository }}
 
 jobs:
-  run-pipeline:
+  weekly-pipeline:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.mode == 'weekly' || github.event.inputs.mode == ''))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -16,19 +43,51 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - name: Run analytics pipeline
-        env:
-          IG_APP_ID: ${{ secrets.IG_APP_ID }}
-          IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
-          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-          IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
-          GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
-          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-          GOOGLE_SPREADSHEET_ID: ${{ secrets.GOOGLE_SPREADSHEET_ID }}
-          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
-          GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPO: ${{ github.repository }}
-        run: python src/main.py
+      - run: python src/main.py
+
+  quarterly-reviews:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Q1 review (March 31)
+        run: |
+          DAY=$(date -u +"%m-%d")
+          if [ "$DAY" = "03-31" ]; then python3 src/review_runner.py --quarterly --q 1; fi
+      - name: Q2 review (June 30)
+        run: |
+          DAY=$(date -u +"%m-%d")
+          if [ "$DAY" = "06-30" ]; then python3 src/review_runner.py --quarterly --q 2; fi
+      - name: Q3 review (September 30)
+        run: |
+          DAY=$(date -u +"%m-%d")
+          if [ "$DAY" = "09-30" ]; then python3 src/review_runner.py --quarterly --q 3; fi
+      - name: Q4 + Annual review (December 31)
+        run: |
+          DAY=$(date -u +"%m-%d")
+          if [ "$DAY" = "12-31" ]; then python3 src/review_runner.py --all; fi
+
+  manual-review:
+    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.mode == 'quarterly' || github.event.inputs.mode == 'annual' || github.event.inputs.mode == 'all_reviews')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Run manual review
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          if [ "$MODE" = "quarterly" ]; then python3 src/review_runner.py --quarterly
+          elif [ "$MODE" = "annual" ]; then python3 src/review_runner.py --annual
+          elif [ "$MODE" = "all_reviews" ]; then python3 src/review_runner.py --all
+          fi
