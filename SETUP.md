@@ -218,3 +218,29 @@ In `collect_web_pulse()`, add to the `_get_user_metrics` call or create a new
 `eventName`. Then add the new columns to `WEB_PULSE_HEADERS`.
 
 See the Google Analytics Data API docs for the exact metric names.
+
+---
+
+## Step 8 — Test the review emails
+
+Once the weekly pipeline is working, test the reviews:
+
+```bash
+# Current quarter
+python3 src/review_runner.py --quarterly
+
+# Current year
+python3 src/review_runner.py --annual
+
+# Both at once (simulates Dec 31)
+python3 src/review_runner.py --all
+
+# Specific quarter/year
+python3 src/review_runner.py --quarterly --q 1 --year 2026
+python3 src/review_runner.py --annual --year 2026
+```
+
+You can also trigger from GitHub Actions → Run workflow → select mode dropdown.
+
+> Review emails read all historical data from your Google Sheet.
+> The more weeks of data in the sheet, the more meaningful the insights.

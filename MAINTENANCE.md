@@ -100,3 +100,47 @@ GitHub → Actions → Weekly Analytics Pipeline → Run workflow.
 
 If data already exists for the week, the pipeline skips writing it again.
 Delete the relevant rows first if you need to force a rewrite.
+
+---
+
+## Triggering review emails manually
+
+**From the command line:**
+```bash
+python3 src/review_runner.py --quarterly          # current quarter
+python3 src/review_runner.py --annual             # current year
+python3 src/review_runner.py --all                # both
+python3 src/review_runner.py --quarterly --q 2 --year 2026
+python3 src/review_runner.py --annual --year 2025
+```
+
+**From GitHub Actions:**
+Actions → Weekly Analytics Pipeline → Run workflow → select mode:
+- `quarterly` — current quarter review
+- `annual` — current year review
+- `all_reviews` — both
+
+---
+
+## Review email schedule
+
+| Review | Trigger date | Covers |
+|--------|-------------|--------|
+| Q1 | March 31 | Jan 1 – Mar 31 |
+| Q2 | June 30 | Apr 1 – Jun 30 |
+| Q3 | September 30 | Jul 1 – Sep 30 |
+| Q4 | December 31 | Oct 1 – Dec 31 |
+| Annual | December 31 | Full calendar year |
+
+Q4 and Annual both send on December 31 as two separate emails.
+
+---
+
+## Updating the AI insights tone or focus
+
+The weekly insights prompt is in `src/email_digest.py` → `_get_ai_insights()`.
+The review insights prompt is in `src/review_digest.py` → `_get_review_insights()`.
+
+Both prompts are written with a B2B lens — website performance first, Instagram second.
+Edit the prompt text directly and redeploy to change tone, focus, or add context
+about your specific niche or target client.
