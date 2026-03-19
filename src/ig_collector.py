@@ -14,6 +14,9 @@ Deprecated and NOT used:
 
 import requests
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+MOUNTAIN_TZ = ZoneInfo("America/Denver")
 from typing import Any
 
 import config
