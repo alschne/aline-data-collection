@@ -85,6 +85,8 @@ def run():
         )
 
         post_rows = ig_collector.collect_ig_stars(week_start, week_end)
+        # Sort oldest to newest so the sheet stays in chronological order
+        post_rows = sorted(post_rows, key=lambda p: (p.get("post_date", ""), p.get("post_time", "")))
         new_posts = 0
         for post in post_rows:
             permalink = post.get("permalink", "")
